@@ -57,7 +57,7 @@ Digital filltering is enabled in `idf.py menuconfig -> Humidity sensor AM2301 ->
 
 ## Source Code
 
-The source is available from [GitHub](https://github.com/KrzysztofZurek1973/iot_components/tree/master/thing_button).
+The source is available from [GitHub](https://github.com/KrzysztofZurek1973/iot_thing_humidity_sensor_AM2301).
 
 ## License
 
