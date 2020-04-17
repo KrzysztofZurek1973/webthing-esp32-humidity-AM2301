@@ -1,0 +1,20 @@
+menu "Humidity sensor AM2301"
+
+config AM2301_GPIO
+    int "AM2301 data GPIO number"
+	range 0 34
+	default 25
+	help
+		GPIO number (IOxx) to access One Wire Bus.
+
+		Some GPIOs are used for other purposes (flash connections, etc.) and cannot be used.
+
+		GPIOs 35-39 are input-only so cannot be used to drive the One Wire Bus.
+
+config ENABLE_DIGITAL_FILTER
+	bool "Enable sensor data filtering"
+	default y
+	help
+		Enables digital filtering of temperature and humidity data. AM2301 produces random spikes especially in temperature data.  
+
+endmenu
