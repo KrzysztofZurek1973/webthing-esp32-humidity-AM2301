@@ -186,7 +186,7 @@ void am2301_humidity_reader_fun(void *pvParameter){
 						}
 					}
 					//AM2301 produces spikes in temperature data
-					//digital filter shoud remove them
+					//digital filter should remove them
 	                t2 = bessel_filter(t2, xv_temp, yv_temp);
 	                h2 = bessel_filter(h2, xv_humi, yv_humi);
 #endif	                
@@ -202,7 +202,7 @@ void am2301_humidity_reader_fun(void *pvParameter){
 	                time(&time_now);
 					//temperature
 					double dt = fabs(temperature - prev_temp);
-					if ((dt >= 0.1) || ((time_now - prev_time_temp) >= 30)){
+					if ((dt >= 0.1) || ((time_now - prev_time_temp) >= 60)){
 						int8_t s = inform_all_subscribers_prop(prop_temperature);
 						if (s == 0){
 							prev_temp = temperature;
@@ -212,32 +212,42 @@ void am2301_humidity_reader_fun(void *pvParameter){
 							printf("temperature NOT sent\n");
 						}
 					}
+					
+					//for tests
+					if (dt > 0.1){
+						printf("| OK-%i-%i | T: %4.3f; H: %4.1f; D: %3.1f\n",
+							all_probes, ok, temperature, humidity, dew_point);
+					}
+					//end of test
+					
 					//humidity
 					double dh = fabs(humidity - prev_humi);
-					if ((dh >= 1.0) || ((time_now - prev_time_humi) >= 30)){
+					if ((dh >= 1.0) || ((time_now - prev_time_humi) >= 60)){
 						int8_t s = inform_all_subscribers_prop(prop_humidity);
 						if (s == 0){
 							prev_humi = humidity;
 							prev_time_humi = time_now;
 						}
 						else{
-							printf("humidity NOT sent, dt: %i\n", (int32_t)(time_now - prev_time_temp));
+							printf("humidity NOT sent, dt: %i\n",
+								(int32_t)(time_now - prev_time_temp));
 						}
 					}
 					//dew point
 					double ddp = fabs(dew_point - prev_dew);
-					if ((ddp >= 0.5) || ((time_now - prev_time_dew) >= 30)){
+					if ((ddp >= 0.5) || ((time_now - prev_time_dew) >= 60)){
 						int8_t s = inform_all_subscribers_prop(prop_dew_point);
 						if (s == 0){
 							prev_dew = dew_point;
 							prev_time_dew = time_now;
 						}
 						else{
-							printf("dew point NOT sent, dt: %i\n", (int32_t)(time_now - prev_time_temp));
+							printf("dew point NOT sent, dt: %i\n",
+								(int32_t)(time_now - prev_time_temp));
 						}
 					}
-					printf("| OK-%i-%i | T: %4.3f; H: %4.1f; D: %3.1f\n",
-						all_probes, ok, temperature, humidity, dew_point);
+					//printf("| OK-%i-%i | T: %4.3f; H: %4.1f; D: %3.1f\n",
+					//	all_probes, ok, temperature, humidity, dew_point);
                 }
                 break;
                 
@@ -341,7 +351,7 @@ thing_t *init_humidity_sensor_am2301(char *_thing_id){
 	thing_am2301 -> at_context = things_context;
 	thing_am2301 -> model_len = 1500;
 	//set @type
-	thing_am2301_type.at_type = "MultiLevelSensor";
+	thing_am2301_type.at_type = "HumiditySensor";
 	thing_am2301_type.next = NULL;
 	set_thing_type(thing_am2301, &thing_am2301_type);
 	thing_am2301 -> description = "Internet connected humidity sensor AM2301";
@@ -350,7 +360,7 @@ thing_t *init_humidity_sensor_am2301(char *_thing_id){
 	prop_humidity = property_init(NULL, NULL);
 	prop_humidity -> id = "humidity";
 	prop_humidity -> description = "relative humidity";
-	humidity_prop_type.at_type = "LevelProperty";
+	humidity_prop_type.at_type = "HumidityProperty";
 	humidity_prop_type.next = NULL;
 	prop_humidity -> at_type = &humidity_prop_type;
 	prop_humidity -> type = VAL_NUMBER;
