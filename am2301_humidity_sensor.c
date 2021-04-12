@@ -173,81 +173,83 @@ void am2301_humidity_reader_fun(void *pvParameter){
 	                t2 = (double)t1/10; //raw temperature
 	                h1 = h1 & 0x00000FFF;
 	                h2 = (double)h1/10; //raw humidity
+	                if (first_probe == true){
+	                    prev_temp = t2;
+	                }
+	                if (abs(prev_temp - t2) < 20){
 	                
 #ifdef CONFIG_ENABLE_DIGITAL_FILTER
-	                if (first_probe == true){
-	                	//initialize digital filter
-	                	first_probe = false;
-	                	for (int i = 0; i <= NZEROS; i++){
-							xv_temp[i] = t2 / GAIN;
-							yv_temp[i] = t2;
-							xv_humi[i] = h2 / GAIN;
-							yv_humi[i] = h2;
-						}
-					}
-					//AM2301 produces spikes in temperature data
-					//digital filter should remove them
-	                t2 = bessel_filter(t2, xv_temp, yv_temp);
-	                h2 = bessel_filter(h2, xv_humi, yv_humi);
+	                    if (first_probe == true){
+	                    	//initialize digital filter
+	                	    first_probe = false;
+	                	    for (int i = 0; i <= NZEROS; i++){
+						    	xv_temp[i] = t2 / GAIN;
+						    	yv_temp[i] = t2;
+						    	xv_humi[i] = h2 / GAIN;
+						    	yv_humi[i] = h2;
+						    }
+					    }
+    					//AM2301 produces spikes in temperature data
+	    				//digital filter should remove them
+	                    t2 = bessel_filter(t2, xv_temp, yv_temp);
+	                    h2 = bessel_filter(h2, xv_humi, yv_humi);
 #endif	                
+	                    xSemaphoreTake(am2301_mux, portMAX_DELAY);
+	                    temperature = t2;
+	                    humidity = h2;
+	                    xSemaphoreGive(am2301_mux);
 	                
-	                xSemaphoreTake(am2301_mux, portMAX_DELAY);
-	                temperature = t2;
-	                humidity = h2;
-	                xSemaphoreGive(am2301_mux);
+	                    dew_point = dew_point_calc(temperature, humidity);
 	                
-	                dew_point = dew_point_calc(temperature, humidity);
-	                
-	                //inform subscribers
-	                time(&time_now);
-					//temperature
-					double dt = fabs(temperature - prev_temp);
-					if ((dt >= 0.1) || ((time_now - prev_time_temp) >= 60)){
-						int8_t s = inform_all_subscribers_prop(prop_temperature);
-						if (s == 0){
-							prev_temp = temperature;
-							prev_time_temp = time_now;
-						}
-						else{
-							printf("temperature NOT sent\n");
-						}
-					}
+	                    //inform subscribers
+	                    time(&time_now);
+					    //temperature
+    					double dt = fabs(temperature - prev_temp);
+	    				if ((dt >= 0.1) || ((time_now - prev_time_temp) >= 60)){
+	    					int8_t s = inform_all_subscribers_prop(prop_temperature);
+	    					if (s == 0){
+	    						prev_temp = temperature;
+	    						prev_time_temp = time_now;
+	    					}
+	    					else{
+	    						printf("temperature NOT sent\n");
+	    					}
+	    				}
 					
-					//for tests
-					if (dt > 0.1){
-						printf("| OK-%i-%i | T: %4.3f; H: %4.1f; D: %3.1f\n",
-							all_probes, ok, temperature, humidity, dew_point);
-					}
-					//end of test
+				    	//for tests
+					    if (dt > 0.1){
+					    	printf("| OK-%i-%i | T: %4.3f; H: %4.1f; D: %3.1f\n",
+					    		all_probes, ok, temperature, humidity, dew_point);
+					    }
+					    //end of test
 					
-					//humidity
-					double dh = fabs(humidity - prev_humi);
-					if ((dh >= 1.0) || ((time_now - prev_time_humi) >= 60)){
-						int8_t s = inform_all_subscribers_prop(prop_humidity);
-						if (s == 0){
-							prev_humi = humidity;
-							prev_time_humi = time_now;
-						}
-						else{
-							printf("humidity NOT sent, dt: %i\n",
-								(int32_t)(time_now - prev_time_temp));
-						}
-					}
-					//dew point
-					double ddp = fabs(dew_point - prev_dew);
-					if ((ddp >= 0.5) || ((time_now - prev_time_dew) >= 60)){
-						int8_t s = inform_all_subscribers_prop(prop_dew_point);
-						if (s == 0){
-							prev_dew = dew_point;
-							prev_time_dew = time_now;
-						}
-						else{
-							printf("dew point NOT sent, dt: %i\n",
-								(int32_t)(time_now - prev_time_temp));
-						}
-					}
-					//printf("| OK-%i-%i | T: %4.3f; H: %4.1f; D: %3.1f\n",
-					//	all_probes, ok, temperature, humidity, dew_point);
+					    //humidity
+					    double dh = fabs(humidity - prev_humi);
+					    if ((dh >= 1.0) || ((time_now - prev_time_humi) >= 60)){
+					    	int8_t s = inform_all_subscribers_prop(prop_humidity);
+					    	if (s == 0){
+					    		prev_humi = humidity;
+					    		prev_time_humi = time_now;
+					    	}
+					    	else{
+					    		printf("humidity NOT sent, dt: %i\n",
+					    			(int32_t)(time_now - prev_time_temp));
+					    	}
+					    }
+					    //dew point
+					    double ddp = fabs(dew_point - prev_dew);
+					    if ((ddp >= 0.5) || ((time_now - prev_time_dew) >= 60)){
+					    	int8_t s = inform_all_subscribers_prop(prop_dew_point);
+					    	if (s == 0){
+					    		prev_dew = dew_point;
+					    		prev_time_dew = time_now;
+					    	}
+					    	else{
+					    		printf("dew point NOT sent, dt: %i\n",
+					    			(int32_t)(time_now - prev_time_temp));
+					    	}
+					    }
+                    }
                 }
                 break;
                 
