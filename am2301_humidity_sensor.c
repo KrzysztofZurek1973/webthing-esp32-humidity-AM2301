@@ -369,6 +369,7 @@ thing_t *init_humidity_sensor_am2301(char *_thing_id){
 	prop_humidity -> value = &humidity;
 	prop_humidity -> max_value.float_val = 100;
 	prop_humidity -> min_value.float_val = 0;
+	prop_humidity -> multiple_of.float_val = 0.5;
 	prop_humidity -> unit = "percent";
 	prop_humidity -> title = "Humidity";
 	prop_humidity -> read_only = true;
@@ -388,6 +389,7 @@ thing_t *init_humidity_sensor_am2301(char *_thing_id){
 	prop_temperature -> value = &temperature;
 	prop_temperature -> max_value.float_val = 80;
 	prop_temperature -> min_value.float_val = -40;
+	prop_temperature -> multiple_of.float_val = 0.1;
 	prop_temperature -> unit = "degree celsius";
 	prop_temperature -> title = "Temperature";
 	prop_temperature -> read_only = true;
@@ -407,6 +409,7 @@ thing_t *init_humidity_sensor_am2301(char *_thing_id){
 	prop_dew_point -> value = &dew_point;
 	prop_dew_point -> max_value.float_val = 40;
 	prop_dew_point -> min_value.float_val = -20;
+	prop_dew_point -> multiple_of.float_val = 0.1;
 	prop_dew_point -> unit = "degree celsius";
 	prop_dew_point -> title = "Dew point";
 	prop_dew_point -> read_only = true;
